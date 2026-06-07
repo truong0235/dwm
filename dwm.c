@@ -215,6 +215,7 @@ static void toggleview(const Arg *arg);
 static void unfocus(Client *c, int setfocus);
 static void unmanage(Client *c, int destroyed);
 static void unmapnotify(XEvent *e);
+static void updatelayoutborders(Monitor *m);
 static void updatebarpos(Monitor *m);
 static void updatebars(void);
 static void updateclientlist(void);
@@ -396,6 +397,7 @@ void
 arrangemon(Monitor *m)
 {
 	strncpy(m->ltsymbol, m->lt[m->sellt]->symbol, sizeof m->ltsymbol);
+	updatelayoutborders(m);
 	if (m->lt[m->sellt]->arrange)
 		m->lt[m->sellt]->arrange(m);
 }
@@ -1759,6 +1761,20 @@ toggleview(const Arg *arg)
 		selmon->tagset[selmon->seltags] = newtagset;
 		focus(NULL);
 		arrange(selmon);
+	}
+}
+
+void
+updatelayoutborders(Monitor *m)
+{
+	Client *c;
+	unsigned int bw = m->lt[m->sellt]->arrange == monocle ? monocle_borderpx : borderpx;
+
+	for (c = m->clients; c; c = c->next) {
+		if (!ISVISIBLE(c) || c->isfullscreen || c->bw == bw)
+			continue;
+		c->bw = bw;
+		resizeclient(c, c->x, c->y, c->w, c->h);
 	}
 }
 
